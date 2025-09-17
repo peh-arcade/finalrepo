@@ -1,0 +1,247 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* Gaming Arcade Design System - Purple Theme with Modern Gaming Aesthetics */
+
+@layer base {
+  :root {
+    /* Gaming Purple Palette */
+    --background: 240 30% 8%;
+    --foreground: 280 20% 95%;
+
+    --card: 240 25% 12%;
+    --card-foreground: 280 15% 90%;
+
+    --popover: 240 25% 12%;
+    --popover-foreground: 280 15% 90%;
+
+    --primary: 270 85% 60%;
+    --primary-foreground: 0 0% 100%;
+
+    --secondary: 240 20% 18%;
+    --secondary-foreground: 280 15% 85%;
+
+    --muted: 240 15% 15%;
+    --muted-foreground: 280 10% 60%;
+
+    --accent: 280 90% 70%;
+    --accent-foreground: 240 30% 8%;
+
+    --destructive: 0 85% 60%;
+    --destructive-foreground: 0 0% 100%;
+
+    --border: 240 15% 20%;
+    --input: 240 15% 20%;
+    --ring: 270 85% 60%;
+
+    --radius: 1rem;
+
+    /* Gaming Specific Colors */
+    --game-bg: 240 35% 6%;
+    --game-card: 240 25% 12%;
+    --game-accent: 280 90% 70%;
+    --game-success: 140 85% 60%;
+    --game-warning: 45 90% 65%;
+    --game-danger: 0 85% 60%;
+
+    /* Gradients */
+    --gradient-primary: linear-gradient(135deg, hsl(270 85% 60%) 0%, hsl(280 90% 70%) 100%);
+    --gradient-card: linear-gradient(145deg, hsl(240 25% 12% / 0.8) 0%, hsl(240 20% 18% / 0.6) 100%);
+    --gradient-bg: linear-gradient(135deg, hsl(240 30% 8%) 0%, hsl(260 40% 12%) 50%, hsl(280 35% 10%) 100%);
+    --gradient-game: linear-gradient(180deg, hsl(240 35% 6%) 0%, hsl(240 30% 8%) 100%);
+
+    /* Shadows & Effects */
+    --shadow-game: 0 14px 28px -10px hsl(270 85% 60% / 0.18); /* softer */
+    --shadow-card: 0 10px 18px -6px hsl(240 30% 8% / 0.35), 0 6px 10px -4px hsl(240 30% 8% / 0.45);
+    --glow-primary: 0 0 18px hsl(270 85% 60% / 0.35); /* reduced */
+    --glow-accent: 0 0 12px hsl(280 90% 70% / 0.30); /* reduced */
+
+    /* Animations */
+    --transition-smooth: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+    --transition-bounce: all 0.3s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+
+    --sidebar-background: 0 0% 98%;
+
+    --sidebar-foreground: 240 5.3% 26.1%;
+
+    --sidebar-primary: 240 5.9% 10%;
+
+    --sidebar-primary-foreground: 0 0% 98%;
+
+    --sidebar-accent: 240 4.8% 95.9%;
+
+    --sidebar-accent-foreground: 240 5.9% 10%;
+
+    --sidebar-border: 220 13% 91%;
+
+    --sidebar-ring: 217.2 91.2% 59.8%;
+  }
+
+  .dark {
+    --background: 222.2 84% 4.9%;
+    --foreground: 210 40% 98%;
+
+    --card: 222.2 84% 4.9%;
+    --card-foreground: 210 40% 98%;
+
+    --popover: 222.2 84% 4.9%;
+    --popover-foreground: 210 40% 98%;
+
+    --primary: 210 40% 98%;
+    --primary-foreground: 222.2 47.4% 11.2%;
+
+    --secondary: 217.2 32.6% 17.5%;
+    --secondary-foreground: 210 40% 98%;
+
+    --muted: 217.2 32.6% 17.5%;
+    --muted-foreground: 215 20.2% 65.1%;
+
+    --accent: 217.2 32.6% 17.5%;
+    --accent-foreground: 210 40% 98%;
+
+    --destructive: 0 62.8% 30.6%;
+    --destructive-foreground: 210 40% 98%;
+
+    --border: 217.2 32.6% 17.5%;
+    --input: 217.2 32.6% 17.5%;
+    --ring: 212.7 26.8% 83.9%;
+    --sidebar-background: 240 5.9% 10%;
+    --sidebar-foreground: 240 4.8% 95.9%;
+    --sidebar-primary: 224.3 76.3% 48%;
+    --sidebar-primary-foreground: 0 0% 100%;
+    --sidebar-accent: 240 3.7% 15.9%;
+    --sidebar-accent-foreground: 240 4.8% 95.9%;
+    --sidebar-border: 240 3.7% 15.9%;
+    --sidebar-ring: 217.2 91.2% 59.8%;
+  }
+}
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+
+  body {
+    @apply bg-background text-foreground;
+    background: var(--gradient-bg);
+    min-height: 100vh;
+  }
+}
+
+@layer components {
+  /* Game Card Styles */
+  .game-card {
+    @apply relative overflow-hidden rounded-2xl p-6 backdrop-blur-sm border;
+    background: var(--gradient-card);
+    border-color: hsl(var(--border));
+    box-shadow: var(--shadow-card);
+    transition: var(--transition-smooth);
+    transform: translateY(0); /* reset base */
+  }
+
+  .game-card:hover {
+    transform: translateY(-4px); /* was -8px */
+    box-shadow: 0 16px 30px -10px hsl(270 85% 60% / 0.22);
+  }
+
+  .game-card::before {
+    content: '';
+    @apply absolute inset-0 opacity-0 rounded-2xl;
+    background: var(--gradient-primary);
+    transition: var(--transition-smooth);
+    z-index: -1;
+  }
+
+  .game-card:hover::before {
+    opacity: 0.1;
+  }
+
+  /* Game Button Styles */
+  .game-btn-primary {
+    @apply px-8 py-3 rounded-xl font-semibold text-center transition-all duration-300;
+    background: var(--gradient-primary);
+    color: hsl(var(--primary-foreground));
+    box-shadow: 0 0 16px hsl(270 85% 60% / 0.35);
+  }
+
+  .game-btn-primary:hover {
+    box-shadow: 0 0 20px hsl(270 85% 60% / 0.45), 0 8px 16px hsl(270 85% 60% / 0.22);
+  }
+
+  .game-btn-secondary {
+    @apply px-6 py-2 rounded-lg font-medium border backdrop-blur-sm;
+    background: hsl(var(--secondary) / 0.8);
+    border-color: hsl(var(--border));
+    color: hsl(var(--secondary-foreground));
+    transition: var(--transition-smooth);
+  }
+
+  .game-btn-secondary:hover {
+    background: hsl(var(--secondary));
+    border-color: hsl(var(--accent));
+  }
+
+  /* Glow Animation */
+  .glow-pulse {
+    animation: glow-pulse 3s ease-in-out infinite alternate;
+  }
+
+  @keyframes glow-pulse {
+    0% {
+      box-shadow: 0 0 14px hsl(270 85% 60% / 0.28);
+    }
+    100% {
+      box-shadow: 0 0 26px hsl(270 85% 60% / 0.45), 0 0 40px hsl(280 90% 70% / 0.30);
+    }
+  }
+
+  /* Floating Animation */
+  .float-animation {
+    animation: float 3s ease-in-out infinite;
+  }
+
+  @keyframes float {
+    0%, 100% {
+      transform: translateY(0px);
+    }
+    50% {
+      transform: translateY(-10px);
+    }
+  }
+
+  /* Mobile overrides: drastically reduce glow & animations */
+  @media (max-width: 640px) {
+    .glow-pulse {
+      animation: none;
+      box-shadow: 0 0 10px hsl(270 85% 60% / 0.25);
+    }
+    .game-card,
+    .game-card:hover {
+      box-shadow: 0 6px 14px -4px hsl(270 85% 60% / 0.22);
+      transform: translateY(0);
+    }
+    .game-btn-primary,
+    .game-btn-primary:hover {
+      box-shadow: 0 0 10px hsl(270 85% 60% / 0.28);
+      transform: none;
+    }
+    .game-btn-secondary {
+      background: hsl(var(--secondary) / 0.65);
+    }
+    .game-card::before {
+      opacity: 0.05 !important;
+    }
+  }
+
+  /* Optional: respect prefers-reduced-motion */
+  @media (prefers-reduced-motion: reduce) {
+    .glow-pulse {
+      animation: none;
+    }
+    .game-card,
+    .game-card:hover {
+      transition: none;
+    }
+  }
+}
