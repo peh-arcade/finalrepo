@@ -253,6 +253,10 @@ export const SnakeGame: React.FC<SnakeGameProps> = ({ onClose }) => {
   const gridWidth = GRID_COLS * CELL_SIZE;
   const gridHeight = GRID_ROWS * CELL_SIZE;
 
+  // Base cell size (responsive on mobile) + food scaling factor
+  const baseCellSize = isMobile ? Math.min(CELL_SIZE, (window.innerWidth - 40) / GRID_COLS) : CELL_SIZE;
+  const FOOD_SCALE = 1.3; // Increase apple size (1.0 = normal)
+
   return (
     <div className="flamingo-overlay">
       <div className="flamingo-topbar">
@@ -327,45 +331,31 @@ export const SnakeGame: React.FC<SnakeGameProps> = ({ onClose }) => {
             </div>
 
             {/* Snake segments */}
-            {snake.map((segment, idx) => {
-              const cellSizeActual = isMobile ? 
-                Math.min(CELL_SIZE, (window.innerWidth - 40) / GRID_COLS) : 
-                CELL_SIZE;
-              
-              return (
-                <div
-                  key={idx}
-                  className={`snake-segment ${
-                    idx === 0 ? 'snake-head' : 
-                    idx === snake.length - 1 ? 'snake-tail' : 
-                    'snake-body'
-                  } moving`}
-                  style={{
-                    left: segment.x * cellSizeActual,
-                    top: segment.y * cellSizeActual,
-                    width: cellSizeActual - 1,
-                    height: cellSizeActual - 1
-                  }}
-                />
-              );
-            })}
+            {snake.map((segment, idx) => (
+              <div
+                key={idx}
+                className={`snake-segment ${
+                  idx === 0 ? 'snake-head' :
+                  idx === snake.length - 1 ? 'snake-tail' :
+                  'snake-body'
+                } moving`}
+                style={{
+                  left: segment.x * baseCellSize,
+                  top: segment.y * baseCellSize,
+                  width: baseCellSize - 1,
+                  height: baseCellSize - 1
+                }}
+              />
+            ))}
 
-            {/* Food */}
+            {/* Food (enlarged & centered) */}
             <div
               className="snake-food"
               style={{
-                left: food.x * (isMobile ? 
-                  Math.min(CELL_SIZE, (window.innerWidth - 40) / GRID_COLS) : 
-                  CELL_SIZE),
-                top: food.y * (isMobile ? 
-                  Math.min(CELL_SIZE, (window.innerWidth - 40) / GRID_COLS) : 
-                  CELL_SIZE),
-                width: (isMobile ? 
-                  Math.min(CELL_SIZE, (window.innerWidth - 40) / GRID_COLS) : 
-                  CELL_SIZE) - 2,
-                height: (isMobile ? 
-                  Math.min(CELL_SIZE, (window.innerWidth - 40) / GRID_COLS) : 
-                  CELL_SIZE) - 2
+                width: baseCellSize * FOOD_SCALE - 2,
+                height: baseCellSize * FOOD_SCALE - 2,
+                left: food.x * baseCellSize - ((FOOD_SCALE - 1) * baseCellSize) / 2,
+                top: food.y * baseCellSize - ((FOOD_SCALE - 1) * baseCellSize) / 2
               }}
             />
 
