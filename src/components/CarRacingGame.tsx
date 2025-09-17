@@ -7,8 +7,7 @@ import car3Png from "../assets/car3.png";
 import car4Png from "../assets/car4.png";
 import car5Png from "../assets/car5.png";
 import car6Png from "../assets/car6.png";
-// Import track and environment images
-import trackPng from "../assets/track.png";
+// Import environment images
 import treesPng from "../assets/trees.png";
 
 interface CarRacingGameProps {
@@ -95,7 +94,6 @@ export const CarRacingGame: React.FC<CarRacingGameProps> = ({ onClose }) => {
   // Image refs for car sprites and environment
   const playerCarImageRef = useRef<HTMLImageElement | null>(null);
   const obstacleCarImagesRef = useRef<HTMLImageElement[]>([]);
-  const trackImageRef = useRef<HTMLImageElement | null>(null);
   const treesImageRef = useRef<HTMLImageElement | null>(null);
   const [imagesLoaded, setImagesLoaded] = useState(false);
   const carIdCounter = useRef(0);
@@ -135,7 +133,7 @@ export const CarRacingGame: React.FC<CarRacingGameProps> = ({ onClose }) => {
   // Load car images and environment assets
   useEffect(() => {
     let loadedCount = 0;
-    const totalImages = carImages.length + 3; // +1 for player car, +1 for track, +1 for trees
+    const totalImages = carImages.length + 2; // player car + trees (track removed)
 
     const checkAllLoaded = () => {
       loadedCount++;
@@ -153,16 +151,6 @@ export const CarRacingGame: React.FC<CarRacingGameProps> = ({ onClose }) => {
     };
     playerImg.src = car1Png;
     playerCarImageRef.current = playerImg;
-
-    // Load track image
-    const trackImg = new Image();
-    trackImg.onload = checkAllLoaded;
-    trackImg.onerror = () => {
-      console.warn("Failed to load track.png, using fallback");
-      checkAllLoaded();
-    };
-    trackImg.src = trackPng;
-    trackImageRef.current = trackImg;
 
     // Load trees image
     const treesImg = new Image();
@@ -503,74 +491,61 @@ export const CarRacingGame: React.FC<CarRacingGameProps> = ({ onClose }) => {
         ref={gameCanvasRef}
         className="relative w-full h-full overflow-hidden select-none"
       >
-        {/* Enhanced Racing Track Background with Images */}
+        {/* Enhanced Racing Track Background (track.png removed, use CSS only) */}
         <div className="absolute inset-0">
-          {/* Track Background - Use track.png if available, fallback to gradient */}
-          {trackImageRef.current ? (
-            <div 
-              className="absolute inset-0"
+          {/* Fallback road design */}
+          <div className="absolute inset-0 bg-gradient-to-b from-gray-700 via-gray-800 to-gray-900">
+            {/* Road texture overlay */}
+            <div
+              className="absolute inset-0 opacity-30"
               style={{
-                backgroundImage: `url(${trackImageRef.current.src})`,
-                backgroundSize: 'cover',
-                backgroundPosition: 'center',
-                backgroundRepeat: 'repeat-y',
-                transform: `translateY(${((distance * speed * 1.5) % (window.innerHeight * 2)) - window.innerHeight}px)`
+                backgroundImage: `repeating-linear-gradient(
+                  90deg,
+                  transparent,
+                  transparent 3px,
+                  rgba(255,255,255,0.05) 3px,
+                  rgba(255,255,255,0.05) 6px
+                ), repeating-linear-gradient(
+                  0deg,
+                  transparent,
+                  transparent 2px,
+                  rgba(0,0,0,0.1) 2px,
+                  rgba(0,0,0,0.1) 4px
+                )`,
               }}
             />
-          ) : (
-            /* Fallback road design */
-            <div className="absolute inset-0 bg-gradient-to-b from-gray-700 via-gray-800 to-gray-900">
-              {/* Road texture overlay */}
-              <div className="absolute inset-0 opacity-30" 
-                   style={{
-                     backgroundImage: `repeating-linear-gradient(
-                       90deg,
-                       transparent,
-                       transparent 3px,
-                       rgba(255,255,255,0.05) 3px,
-                       rgba(255,255,255,0.05) 6px
-                     ), repeating-linear-gradient(
-                       0deg,
-                       transparent,
-                       transparent 2px,
-                       rgba(0,0,0,0.1) 2px,
-                       rgba(0,0,0,0.1) 4px
-                     )`
-                   }}>
-              </div>
-            </div>
-          )}
+          </div>
 
           {/* Enhanced Side Trees/Environment - Use trees.png if available */}
           {treesImageRef.current && (
             <>
-              {/* Left side trees - more visible on mobile */}
-              <div 
-                className="absolute left-0 top-0 h-full opacity-90"
-                style={{
-                  width: window.innerWidth > 768 ? '80px' : '60px',
-                  backgroundImage: `url(${treesImageRef.current.src})`,
-                  backgroundSize: 'cover',
-                  backgroundPosition: 'center right',
-                  backgroundRepeat: 'repeat-y',
-                  transform: `translateY(${((distance * speed * 0.8) % (window.innerHeight * 2)) - window.innerHeight}px)`,
-                  filter: 'brightness(0.9) contrast(1.1)'
-                }}
-              />
+              {/* Left side trees (cover everything up to road) */}
+<div
+  className="absolute left-0 top-0 h-full opacity-90"
+  style={{
+    width: 'calc((100% - 400px) / 2)', // Fill all space left of the road
+    backgroundImage: `url(${treesImageRef.current.src})`,
+    backgroundSize: 'contain',
+    backgroundRepeat: 'repeat-y',
+    transform: `translateY(${((distance * speed * 0.8) % (window.innerHeight * 2)) - window.innerHeight}px)`,
+    filter: 'brightness(0.9) contrast(1.1)',
+  }}
+/>
+
+{/* Right side trees (cover everything right of the road) */}
+<div
+  className="absolute right-0 top-0 h-full opacity-90"
+  style={{
+    width: 'calc((100% - 400px) / 2)', // Fill all space right of the road
+    backgroundImage: `url(${treesImageRef.current.src})`,
+    backgroundSize: 'contain',
+    backgroundRepeat: 'repeat-y',
+    transform: `translateY(${((distance * speed * 0.8) % (window.innerHeight * 2)) - window.innerHeight}px)`,
+    filter: 'brightness(0.9) contrast(1.1)',
+  }}
+/>
+
               
-              {/* Right side trees - more visible on mobile */}
-              <div 
-                className="absolute right-0 top-0 h-full opacity-90"
-                style={{
-                  width: window.innerWidth > 768 ? '80px' : '60px',
-                  backgroundImage: `url(${treesImageRef.current.src})`,
-                  backgroundSize: 'cover',
-                  backgroundPosition: 'center left',
-                  backgroundRepeat: 'repeat-y',
-                  transform: `translateY(${((distance * speed * 0.8) % (window.innerHeight * 2)) - window.innerHeight}px) scaleX(-1)`,
-                  filter: 'brightness(0.9) contrast(1.1)'
-                }}
-              />
             </>
           )}
 
