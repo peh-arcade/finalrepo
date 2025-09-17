@@ -1,0 +1,498 @@
+/* Official Snake Game Styling */
+
+.snake-game-container {
+  position: relative;
+  margin: 0 auto;
+  max-width: 600px;
+  background: #0a0a0a;
+  border-radius: 8px;
+  font-family: "Courier New", "Monaco", "Lucida Console", monospace;
+  color: #00ff00;
+  padding: 20px;
+  border: 2px solid #00ff00;
+  box-shadow: 0 0 20px rgba(0, 255, 0, 0.3);
+}
+
+/* Game Header */
+.snake-game-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 20px;
+  padding: 15px;
+  background: #000;
+  border: 1px solid #00ff00;
+  border-radius: 4px;
+}
+
+.snake-game-title {
+  color: #00ff00;
+  font-size: 32px;
+  font-weight: bold;
+  margin: 0;
+  text-shadow: 0 0 10px rgba(0, 255, 0, 0.8);
+  font-family: "Courier New", monospace;
+  letter-spacing: 2px;
+}
+
+.snake-game-scores {
+  display: flex;
+  gap: 20px;
+}
+
+.snake-score-container {
+  background: #001100;
+  padding: 8px 15px;
+  border: 1px solid #00ff00;
+  border-radius: 4px;
+  color: #00ff00;
+  text-align: center;
+  min-width: 80px;
+  box-shadow: inset 0 0 10px rgba(0, 255, 0, 0.2);
+}
+
+.snake-score-label {
+  font-size: 10px;
+  line-height: 10px;
+  text-transform: uppercase;
+  color: #00aa00;
+  margin-bottom: 3px;
+  font-weight: bold;
+}
+
+.snake-score-value {
+  font-size: 18px;
+  font-weight: bold;
+  color: #00ff00;
+  line-height: 18px;
+  text-shadow: 0 0 5px rgba(0, 255, 0, 0.8);
+}
+
+/* Game Controls */
+.snake-game-controls {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  margin-bottom: 20px;
+  padding: 10px;
+  background: #001100;
+  border: 1px solid #00ff00;
+  border-radius: 4px;
+}
+
+.snake-restart-button {
+  background: #003300;
+  color: #00ff00;
+  border: 1px solid #00ff00;
+  border-radius: 4px;
+  padding: 8px 16px;
+  font-size: 14px;
+  font-weight: bold;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  transition: all 0.2s ease;
+  font-family: "Courier New", monospace;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+}
+
+.snake-restart-button:hover {
+  background: #00ff00;
+  color: #000;
+  box-shadow: 0 0 15px rgba(0, 255, 0, 0.6);
+}
+
+/* Game Grid Container */
+.snake-game-grid-container {
+  position: relative;
+  background: #000;
+  border: 2px solid #00ff00;
+  border-radius: 4px;
+  margin: 0 auto;
+  box-shadow: 
+    inset 0 0 20px rgba(0, 255, 0, 0.1),
+    0 0 30px rgba(0, 255, 0, 0.3);
+}
+
+/* Grid Background */
+.snake-grid-background {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background-image: 
+    linear-gradient(rgba(0, 255, 0, 0.1) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(0, 255, 0, 0.1) 1px, transparent 1px);
+  background-size: 20px 20px;
+}
+
+/* Snake Segments */
+.snake-segment {
+  position: absolute;
+  border-radius: 2px;
+  transition: all 0.1s ease;
+}
+
+.snake-head {
+  background: #00ff00;
+  border: 1px solid #00cc00;
+  box-shadow: 
+    0 0 10px rgba(0, 255, 0, 0.8),
+    inset 0 0 5px rgba(255, 255, 255, 0.3);
+  z-index: 3;
+}
+
+.snake-body {
+  background: #00cc00;
+  border: 1px solid #009900;
+  box-shadow: 
+    0 0 8px rgba(0, 255, 0, 0.6),
+    inset 0 0 3px rgba(255, 255, 255, 0.2);
+  z-index: 2;
+}
+
+.snake-tail {
+  background: #009900;
+  border: 1px solid #006600;
+  box-shadow: 
+    0 0 6px rgba(0, 255, 0, 0.4),
+    inset 0 0 2px rgba(255, 255, 255, 0.1);
+  z-index: 1;
+}
+
+/* Food */
+.snake-food {
+  position: absolute;
+  background: #ff0000;
+  border: 1px solid #cc0000;
+  border-radius: 50%;
+  box-shadow: 
+    0 0 15px rgba(255, 0, 0, 0.8),
+    inset 0 0 5px rgba(255, 255, 255, 0.3);
+  animation: snake-food-pulse 1s ease-in-out infinite alternate;
+  z-index: 4;
+}
+
+@keyframes snake-food-pulse {
+  0% {
+    transform: scale(1);
+    box-shadow: 
+      0 0 15px rgba(255, 0, 0, 0.8),
+      inset 0 0 5px rgba(255, 255, 255, 0.3);
+  }
+  100% {
+    transform: scale(1.1);
+    box-shadow: 
+      0 0 20px rgba(255, 0, 0, 1),
+      inset 0 0 8px rgba(255, 255, 255, 0.5);
+  }
+}
+
+/* Game Status */
+.snake-game-status {
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  background: rgba(0, 0, 0, 0.8);
+  color: #00ff00;
+  padding: 8px 12px;
+  border: 1px solid #00ff00;
+  border-radius: 4px;
+  font-size: 12px;
+  font-family: "Courier New", monospace;
+  z-index: 10;
+}
+
+/* Game Overlays */
+.snake-game-overlay {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(0, 0, 0, 0.9);
+  z-index: 100;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 4px;
+  animation: snake-overlay-appear 0.3s ease-in-out;
+}
+
+@keyframes snake-overlay-appear {
+  0% {
+    opacity: 0;
+    transform: scale(0.8);
+  }
+  100% {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+.snake-overlay-content {
+  text-align: center;
+  padding: 30px;
+  background: #001100;
+  border: 2px solid #00ff00;
+  border-radius: 8px;
+  box-shadow: 0 0 30px rgba(0, 255, 0, 0.5);
+}
+
+.snake-overlay-title {
+  font-size: 36px;
+  font-weight: bold;
+  color: #00ff00;
+  margin: 0 0 15px 0;
+  font-family: "Courier New", monospace;
+  text-shadow: 0 0 15px rgba(0, 255, 0, 0.8);
+  letter-spacing: 2px;
+}
+
+.snake-overlay-message {
+  font-size: 16px;
+  line-height: 1.4;
+  color: #00cc00;
+  margin-bottom: 20px;
+  font-family: "Courier New", monospace;
+}
+
+.snake-overlay-stats {
+  margin: 15px 0;
+  color: #00ff00;
+  font-family: "Courier New", monospace;
+}
+
+.snake-overlay-stat {
+  margin: 5px 0;
+  font-size: 14px;
+}
+
+.snake-overlay-buttons {
+  display: flex;
+  gap: 15px;
+  justify-content: center;
+}
+
+.snake-overlay-button {
+  background: #003300;
+  color: #00ff00;
+  border: 1px solid #00ff00;
+  border-radius: 4px;
+  padding: 10px 20px;
+  font-size: 14px;
+  font-weight: bold;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  font-family: "Courier New", monospace;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+}
+
+.snake-overlay-button:hover {
+  background: #00ff00;
+  color: #000;
+  box-shadow: 0 0 15px rgba(0, 255, 0, 0.6);
+}
+
+.snake-new-record {
+  color: #ffff00;
+  font-size: 16px;
+  font-weight: bold;
+  margin: 10px 0;
+  text-shadow: 0 0 10px rgba(255, 255, 0, 0.8);
+  animation: snake-record-glow 1s ease-in-out infinite alternate;
+}
+
+@keyframes snake-record-glow {
+  0% {
+    text-shadow: 0 0 10px rgba(255, 255, 0, 0.8);
+  }
+  100% {
+    text-shadow: 0 0 20px rgba(255, 255, 0, 1);
+  }
+}
+
+/* Snake Movement Animation */
+.snake-segment.moving {
+  animation: snake-move 0.15s ease-out;
+}
+
+@keyframes snake-move {
+  0% {
+    transform: scale(0.95);
+  }
+  100% {
+    transform: scale(1);
+  }
+}
+
+/* Mobile Controls */
+.snake-mobile-controls {
+  margin-top: 20px;
+  padding: 15px;
+  background: #001100;
+  border: 1px solid #00ff00;
+  border-radius: 4px;
+}
+
+.snake-mobile-controls-title {
+  text-align: center;
+  color: #00ff00;
+  font-size: 14px;
+  margin-bottom: 15px;
+  font-family: "Courier New", monospace;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+}
+
+.snake-mobile-controls-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  grid-template-rows: repeat(3, 1fr);
+  gap: 8px;
+  max-width: 200px;
+  margin: 0 auto;
+}
+
+.snake-control-button {
+  background: #003300;
+  color: #00ff00;
+  border: 1px solid #00ff00;
+  border-radius: 4px;
+  padding: 12px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s ease;
+  min-height: 40px;
+  font-family: "Courier New", monospace;
+  font-weight: bold;
+}
+
+.snake-control-button:hover:not(:disabled) {
+  background: #00ff00;
+  color: #000;
+  box-shadow: 0 0 15px rgba(0, 255, 0, 0.6);
+}
+
+.snake-control-button:disabled {
+  background: #001100;
+  color: #006600;
+  cursor: not-allowed;
+  border-color: #006600;
+}
+
+.snake-control-button:active:not(:disabled) {
+  transform: scale(0.95);
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+  .snake-game-container {
+    padding: 10px;
+    max-width: 100%;
+    margin: 0;
+  }
+  
+  .snake-game-header {
+    flex-direction: column;
+    gap: 15px;
+    padding: 10px;
+  }
+  
+  .snake-game-title {
+    font-size: 24px;
+    text-align: center;
+  }
+  
+  .snake-game-scores {
+    justify-content: center;
+    gap: 15px;
+  }
+  
+  .snake-score-container {
+    padding: 6px 12px;
+    min-width: 70px;
+  }
+  
+  .snake-score-value {
+    font-size: 16px;
+  }
+  
+  .snake-game-controls {
+    padding: 8px;
+  }
+  
+  .snake-restart-button {
+    padding: 8px 12px;
+    font-size: 12px;
+  }
+  
+  .snake-overlay-title {
+    font-size: 28px;
+  }
+  
+  .snake-overlay-message {
+    font-size: 14px;
+  }
+  
+  .snake-overlay-button {
+    padding: 8px 16px;
+    font-size: 12px;
+  }
+  
+  .snake-mobile-controls-grid {
+    max-width: 180px;
+    gap: 6px;
+  }
+  
+  .snake-control-button {
+    padding: 10px;
+    min-height: 35px;
+    font-size: 12px;
+  }
+}
+
+/* Extra small screens */
+@media (max-width: 375px) {
+  .snake-game-container {
+    padding: 8px;
+  }
+  
+  .snake-game-title {
+    font-size: 20px;
+  }
+  
+  .snake-score-container {
+    padding: 4px 8px;
+    min-width: 60px;
+  }
+  
+  .snake-score-value {
+    font-size: 14px;
+  }
+  
+  .snake-restart-button {
+    padding: 6px 10px;
+    font-size: 11px;
+  }
+  
+  .snake-overlay-title {
+    font-size: 24px;
+  }
+  
+  .snake-mobile-controls-grid {
+    max-width: 160px;
+    gap: 4px;
+  }
+  
+  .snake-control-button {
+    padding: 8px;
+    min-height: 32px;
+    font-size: 11px;
+  }
+}

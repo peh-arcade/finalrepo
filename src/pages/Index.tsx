@@ -3,7 +3,7 @@ import { Header } from '@/components/Header';
 import { Hero } from '@/components/Hero';
 import { GameGrid } from '@/components/GameGrid';
 import { SnakeGame } from '@/components/SnakeGame';
-import { TetrisGame } from '@/components/TetrisGame';
+import { Game2048 } from '@/components/Game2048';
 import { FlappyBirdGame } from '@/components/FlappyBirdGame';
 import { CarRacingGame } from '@/components/CarRacingGame';
 
@@ -30,11 +30,11 @@ const Index = () => {
       {selectedGame === 'snake' && (
         <SnakeGame onClose={handleCloseGame} />
       )}
-      {selectedGame === 'tetris' && (
-        <TetrisGame onClose={handleCloseGame} />
+      {selectedGame === '2048' && (
+        <Game2048 onClose={handleCloseGame} />
       )}
       {selectedGame === 'flappybird' && (
-        <FlappyBirdGame onClose={handleCloseGame} />
+        <FlappyBirdGame onExit={handleCloseGame} onScore={() => {}} />
       )}
       {selectedGame === 'racing' && (
         <CarRacingGame onClose={handleCloseGame} />
@@ -44,7 +44,7 @@ const Index = () => {
       <footer className="py-12 border-t border-border/20">
         <div className="container mx-auto px-4 text-center">
           <p className="text-muted-foreground">
-            Built with ❤️ for the ultimate gaming experience
+            Built with ❤️ for the ultimate timepass
           </p>
         </div>
       </footer>

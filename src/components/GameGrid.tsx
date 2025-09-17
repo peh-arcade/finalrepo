@@ -1,6 +1,6 @@
 import React from "react";
 import { GameCard } from "./GameCard";
-import { Gamepad2, Square, Bird, Car } from "lucide-react";
+import { Gamepad2, Hash, Bird, Car } from "lucide-react";
 
 interface GameGridProps {
   onGameSelect: (gameId: string) => void;
@@ -17,11 +17,11 @@ export const GameGrid: React.FC<GameGridProps> = ({ onGameSelect }) => {
       comingSoon: false,
     },
     {
-      id: "tetris",
-      title: "Tetris",
-      description: "Stack blocks and clear lines",
-      icon: Square,
-      bestScore: localStorage.getItem("tetrisHighScore") || "0",
+      id: "2048",
+      title: "2048",
+      description: "Merge numbers to reach 2048",
+      icon: Hash,
+      bestScore: localStorage.getItem("2048HighScore") || "0",
       comingSoon: false,
     },
     {
@@ -29,7 +29,7 @@ export const GameGrid: React.FC<GameGridProps> = ({ onGameSelect }) => {
       title: "Flappy Bird",
       description: "Tap to flap through obstacles",
       icon: Bird,
-      bestScore: localStorage.getItem("flappyBirdHighScore") || "0",
+      bestScore: localStorage.getItem("flappy_best") || "0",
       comingSoon: false,
     },
     {

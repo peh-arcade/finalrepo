@@ -17,7 +17,7 @@ export const Header: React.FC<HeaderProps> = ({ onMenuClick }) => {
             </div>
             <div className="flex flex-col leading-tight">
               <h1 className="text-lg xs:text-xl sm:text-2xl font-bold bg-gradient-to-r from-primary to-accent bg-clip-text text-transparent">
-                PEH Arcade Hub
+                PEH Arcade
               </h1>
               <p className="text-[10px] xs:text-xs text-muted-foreground">
                 Powered by Gaming Excellence

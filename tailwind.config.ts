@@ -106,6 +106,46 @@ export default {
           "70%": {
             transform: "translateY(-5px)"
           }
+        },
+        "tile-appear": {
+          "0%": {
+            opacity: "0",
+            transform: "scale(0)"
+          },
+          "100%": {
+            opacity: "1",
+            transform: "scale(1)"
+          }
+        },
+        "tile-new": {
+          "0%": {
+            transform: "scale(0)"
+          },
+          "50%": {
+            transform: "scale(1.1)"
+          },
+          "100%": {
+            transform: "scale(1)"
+          }
+        },
+        "tile-merged": {
+          "0%": {
+            transform: "scale(1)"
+          },
+          "50%": {
+            transform: "scale(1.2)"
+          },
+          "100%": {
+            transform: "scale(1)"
+          }
+        },
+        "tile-2048-glow": {
+          "0%": {
+            boxShadow: "0 0 30px 10px rgba(243, 215, 116, 0.8)"
+          },
+          "100%": {
+            boxShadow: "0 0 40px 15px rgba(243, 215, 116, 1)"
+          }
         }
       },
       animation: {
@@ -113,7 +153,11 @@ export default {
         "accordion-up": "accordion-up 0.2s ease-out",
         "float": "float 3s ease-in-out infinite",
         "glow-pulse": "glow-pulse 2s ease-in-out infinite alternate",
-        "game-bounce": "game-bounce 2s ease-in-out infinite"
+        "game-bounce": "game-bounce 2s ease-in-out infinite",
+        "tile-appear": "tile-appear 0.2s ease-in-out",
+        "tile-new": "tile-new 0.2s ease-in-out",
+        "tile-merged": "tile-merged 0.15s ease-in-out",
+        "tile-2048-glow": "tile-2048-glow 1.5s ease-in-out infinite alternate"
       },
     },
   },
