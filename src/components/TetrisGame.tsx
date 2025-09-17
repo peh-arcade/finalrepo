@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { X, RotateCcw, Play, Pause, ChevronLeft, ChevronRight, RotateCw, ChevronDown } from 'lucide-react';
 
 interface TetrisGameProps {
@@ -40,8 +40,8 @@ const COLORS = {
 };
 
 export const TetrisGame: React.FC<TetrisGameProps> = ({ onClose }) => {
-  const GRID_WIDTH = 10;
-  const GRID_HEIGHT = 20;
+  const GRID_WIDTH = 14; // increased from 10
+  const GRID_HEIGHT = 26; // increased from 20
   const INITIAL_SPEED = 800;
   const BASE_CELL = 20;
 
@@ -65,6 +65,8 @@ export const TetrisGame: React.FC<TetrisGameProps> = ({ onClose }) => {
   // Smooth fall interpolation (0..1 between logical drops)
   const [fallProgress, setFallProgress] = useState(0);
   const lastDropRef = React.useRef<number>(performance.now());
+  const [isFullscreen, setIsFullscreen] = useState(false);
+  const gameCanvasRef = useRef<HTMLDivElement>(null);
 
   const generateTetromino = useCallback((type: TetrominoType): Tetromino => {
     return {
@@ -73,7 +75,7 @@ export const TetrisGame: React.FC<TetrisGameProps> = ({ onClose }) => {
       rotation: 0,
       shape: TETROMINOES[type][0]
     };
-  }, []);
+  }, [GRID_WIDTH]);
 
   const getRandomTetromino = useCallback((): TetrominoType => {
     const types = Object.keys(TETROMINOES) as TetrominoType[];
@@ -170,22 +172,23 @@ export const TetrisGame: React.FC<TetrisGameProps> = ({ onClose }) => {
         setFallProgress(0);
       }
     } else if (direction === 'down') {
-      // Place piece and spawn new one
+      // Place piece at current position (not newPosition)
       const newGrid = placePiece(currentPiece);
       const { grid: clearedGrid, linesCleared } = clearLines(newGrid);
       
       setGrid(clearedGrid);
       setLines(prev => prev + linesCleared);
-      setScore(prev => prev + linesCleared * 100 * level);
+      // Score based on successfully placed pieces + line bonus
+      setScore(prev => prev + 1 + (linesCleared * 10 * level));
       
       // Check for game over
       const newPiece = generateTetromino(nextPiece);
       if (!isValidPosition(newPiece, clearedGrid)) {
         setGameOver(true);
         setIsPlaying(false);
-        if (score > highScore) {
-          setHighScore(score);
-          localStorage.setItem('tetrisHighScore', score.toString());
+        if (score + 1 + (linesCleared * 10 * level) > highScore) {
+          setHighScore(score + 1 + (linesCleared * 10 * level));
+          localStorage.setItem('tetrisHighScore', (score + 1 + (linesCleared * 10 * level)).toString());
         }
       } else {
         setCurrentPiece(newPiece);
@@ -216,7 +219,8 @@ export const TetrisGame: React.FC<TetrisGameProps> = ({ onClose }) => {
       newPiece.position.y += 1;
     }
     setCurrentPiece(newPiece);
-    movePiece('down');
+    // Trigger placement immediately
+    setTimeout(() => movePiece('down'), 50);
     lastDropRef.current = performance.now();
     setFallProgress(0);
   }, [currentPiece, isPlaying, gameOver, isValidPosition, movePiece]);
@@ -287,6 +291,64 @@ export const TetrisGame: React.FC<TetrisGameProps> = ({ onClose }) => {
     return () => window.removeEventListener('keydown', handleKeyPress);
   }, [movePiece, rotatePiece, dropPiece]);
 
+  // Touch controls for fullscreen
+  const touchStartRef = useRef<{ x: number; y: number } | null>(null);
+
+  useEffect(() => {
+    if (!isFullscreen) return;
+
+    const handleTouchStart = (e: TouchEvent) => {
+      if (e.touches.length > 0) {
+        touchStartRef.current = { x: e.touches[0].clientX, y: e.touches[0].clientY };
+      }
+    };
+
+    const handleTouchEnd = (e: TouchEvent) => {
+      if (!touchStartRef.current || e.changedTouches.length === 0) return;
+      
+      const touchEnd = e.changedTouches[0];
+      const deltaX = touchEnd.clientX - touchStartRef.current.x;
+      const deltaY = touchEnd.clientY - touchStartRef.current.y;
+      const absDeltaX = Math.abs(deltaX);
+      const absDeltaY = Math.abs(deltaY);
+
+      // Minimum swipe distance
+      if (absDeltaX < 30 && absDeltaY < 30) {
+        // Tap - rotate piece
+        rotatePiece();
+        return;
+      }
+
+      // Determine swipe direction
+      if (absDeltaX > absDeltaY) {
+        // Horizontal swipe
+        if (deltaX > 0) {
+          movePiece('right');
+        } else {
+          movePiece('left');
+        }
+      } else {
+        // Vertical swipe
+        if (deltaY > 0) {
+          movePiece('down');
+        }
+      }
+    };
+
+    const canvas = gameCanvasRef.current;
+    if (canvas) {
+      canvas.addEventListener('touchstart', handleTouchStart, { passive: true });
+      canvas.addEventListener('touchend', handleTouchEnd, { passive: true });
+    }
+
+    return () => {
+      if (canvas) {
+        canvas.removeEventListener('touchstart', handleTouchStart);
+        canvas.removeEventListener('touchend', handleTouchEnd);
+      }
+    };
+  }, [isFullscreen, movePiece, rotatePiece]);
+
   useEffect(() => {
     // responsive board scaling
     const baseW = GRID_WIDTH * BASE_CELL + 16;
@@ -302,7 +364,46 @@ export const TetrisGame: React.FC<TetrisGameProps> = ({ onClose }) => {
     return () => window.removeEventListener('resize', handleResize);
   }, []);
 
-  const startGame = () => {
+  // Fullscreen management - only for game canvas
+  const enterFullscreen = useCallback(async () => {
+    try {
+      if (gameCanvasRef.current && gameCanvasRef.current.requestFullscreen) {
+        await gameCanvasRef.current.requestFullscreen();
+        setIsFullscreen(true);
+      }
+    } catch (error) {
+      console.log('Fullscreen not supported or denied');
+    }
+  }, []);
+
+  const exitFullscreen = useCallback(async () => {
+    try {
+      if (document.exitFullscreen && document.fullscreenElement) {
+        await document.exitFullscreen();
+      }
+    } catch (error) {
+      console.log('Exit fullscreen error');
+    }
+    setIsFullscreen(false);
+  }, []);
+
+  const handleGoBack = useCallback(async () => {
+    await exitFullscreen();
+    onClose();
+  }, [exitFullscreen, onClose]);
+
+  // Listen for fullscreen changes
+  useEffect(() => {
+    const handleFullscreenChange = () => {
+      setIsFullscreen(!!document.fullscreenElement);
+    };
+    
+    document.addEventListener('fullscreenchange', handleFullscreenChange);
+    return () => document.removeEventListener('fullscreenchange', handleFullscreenChange);
+  }, []);
+
+  // Modified start game to enter fullscreen
+  const startGame = async () => {
     if (gameOver) {
       setGrid(Array(GRID_HEIGHT).fill(null).map(() => Array(GRID_WIDTH).fill(null)));
       setScore(0);
@@ -317,6 +418,9 @@ export const TetrisGame: React.FC<TetrisGameProps> = ({ onClose }) => {
     setFallProgress(0);
     setNextPiece(getRandomTetromino());
     setIsPlaying(true);
+    
+    // Enter fullscreen when starting
+    await enterFullscreen();
   };
 
   const resetGame = () => {
@@ -335,57 +439,30 @@ export const TetrisGame: React.FC<TetrisGameProps> = ({ onClose }) => {
     return grid;
   };
 
-  // Ghost piece (landing preview)
-  const renderGhostPiece = () => {
-    if (!currentPiece) return null;
-    let ghostY = currentPiece.position.y;
-    while (
-      isValidPosition({
-        ...currentPiece,
-        position: { x: currentPiece.position.x, y: ghostY + 1 }
-      })
-    ) {
-      ghostY++;
-    }
-    const shapes = TETROMINOES[currentPiece.type];
-    const shape = shapes[currentPiece.rotation % shapes.length];
-    return (
-      <div className="absolute top-2 left-2 pointer-events-none opacity-25">
-        {shape.map((row, y) =>
-          row.map((cell, x) =>
-            cell ? (
-              <div
-                key={`g-${x}-${y}`}
-                className={`absolute rounded-sm ${COLORS[currentPiece.type]}`}
-                style={{
-                  width: BASE_CELL - 4,
-                  height: BASE_CELL - 4,
-                  left: (currentPiece.position.x + x) * BASE_CELL + 2,
-                  top: (ghostY + y) * BASE_CELL + 2,
-                  filter: 'grayscale(80%)'
-                }}
-              />
-            ) : null
-          )
-        )}
-      </div>
-    );
-  };
-
   // Active falling piece with interpolated Y
   const renderActivePiece = () => {
     if (!currentPiece) return null;
     const shapes = TETROMINOES[currentPiece.type];
     const shape = shapes[currentPiece.rotation % shapes.length];
+    
+    const cellWidth = isFullscreen ? (window.innerWidth * 0.8) / GRID_WIDTH : BASE_CELL;
+    const cellHeight = isFullscreen ? (window.innerHeight * 0.85) / GRID_HEIGHT : BASE_CELL;
+    
     return (
-      <div className="absolute top-2 left-2 pointer-events-none">
+      <div className="absolute pointer-events-none">
         {shape.map((row, y) =>
           row.map((cell, x) =>
             cell ? (
               <div
                 key={`a-${x}-${y}`}
                 className={`absolute rounded-sm shadow ${COLORS[currentPiece.type]}`}
-                style={{
+                style={isFullscreen ? {
+                  width: cellWidth - 2,
+                  height: cellHeight - 2,
+                  left: (currentPiece.position.x + x) * cellWidth + 1,
+                  top: (currentPiece.position.y + fallProgress + y) * cellHeight + 1,
+                  transition: 'left 90ms linear'
+                } : {
                   width: BASE_CELL - 4,
                   height: BASE_CELL - 4,
                   left: (currentPiece.position.x + x) * BASE_CELL + 2,
@@ -421,7 +498,7 @@ export const TetrisGame: React.FC<TetrisGameProps> = ({ onClose }) => {
 
   return (
     <div className="fixed inset-0 bg-black/80 backdrop-blur-sm z-50 flex items-center justify-center p-2 sm:p-4">
-      <div className="game-card w-full max-w-5xl mx-auto max-h-[100vh] overflow-y-auto">
+      <div className="game-card w-full max-w-full mx-auto max-h-[100vh] overflow-y-auto">
         {/* Header */}
         <div className="flex items-center justify-between mb-6">
           <div className="flex items-center gap-3">
@@ -431,37 +508,37 @@ export const TetrisGame: React.FC<TetrisGameProps> = ({ onClose }) => {
             <h2 className="text-2xl font-bold text-foreground">Tetris</h2>
           </div>
           <button
-            onClick={onClose}
+            onClick={handleGoBack}
             className="game-btn-secondary p-2 hover:bg-destructive hover:text-destructive-foreground"
           >
             <X className="w-5 h-5" />
           </button>
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-          {/* Game Stats */}
-          <div className="space-y-4">
-            <div className="space-y-3">
-              <div>
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 w-full">
+          {/* Game Stats - Full width */}
+          <div className="space-y-4 w-full">
+            <div className="grid grid-cols-2 gap-4 text-center w-full">
+              <div className="bg-gradient-to-br from-accent/20 to-accent/5 rounded-lg p-4 border border-accent/20">
                 <div className="text-2xl font-bold text-accent">{score}</div>
-                <div className="text-sm text-muted-foreground">Score</div>
+                <div className="text-sm text-muted-foreground">Pieces</div>
               </div>
-              <div>
+              <div className="bg-gradient-to-br from-primary/20 to-primary/5 rounded-lg p-4 border border-primary/20">
                 <div className="text-xl font-bold text-primary">{highScore}</div>
                 <div className="text-sm text-muted-foreground">Best</div>
               </div>
-              <div>
+              <div className="bg-gradient-to-br from-secondary/20 to-secondary/5 rounded-lg p-4 border border-secondary/20">
                 <div className="text-lg font-semibold text-foreground">{lines}</div>
                 <div className="text-sm text-muted-foreground">Lines</div>
               </div>
-              <div>
+              <div className="bg-gradient-to-br from-muted/20 to-muted/5 rounded-lg p-4 border border-muted/20">
                 <div className="text-lg font-semibold text-foreground">{level}</div>
                 <div className="text-sm text-muted-foreground">Level</div>
               </div>
             </div>
 
             {/* Next Piece */}
-            <div className="p-4 rounded-lg bg-secondary/50 border border-border/50">
+            <div className="p-4 rounded-lg bg-secondary/50 border border-border/50 w-full">
               <div className="text-sm text-muted-foreground mb-2">Next</div>
               <div className="flex justify-center">
                 {renderNextPiece()}
@@ -469,18 +546,32 @@ export const TetrisGame: React.FC<TetrisGameProps> = ({ onClose }) => {
             </div>
           </div>
 
-          {/* Game Board */}
-          <div className="relative flex justify-center">
+          {/* Game Board - Centered */}
+          <div className="relative flex justify-center w-full lg:col-span-1">
             <div
-              style={{
+              ref={gameCanvasRef}
+              className={`${isFullscreen ? 'fixed inset-0 bg-black flex items-center justify-center z-[60]' : ''}`}
+              style={isFullscreen ? {
+                width: '100vw',
+                height: '100vh'
+              } : {
                 width: (GRID_WIDTH * BASE_CELL + 16) * scale,
                 height: (GRID_HEIGHT * BASE_CELL + 16) * scale
               }}
-              className="origin-top-left"
             >
               <div
                 className="bg-game-bg border border-border/50 rounded-xl p-2 relative overflow-hidden"
-                style={{
+                style={isFullscreen ? {
+                  width: window.innerWidth * 0.8,
+                  height: window.innerHeight * 0.85,
+                  transform: 'none',
+                  transformOrigin: 'center',
+                  display: 'grid',
+                  gridTemplateColumns: `repeat(${GRID_WIDTH}, 1fr)`,
+                  gridTemplateRows: `repeat(${GRID_HEIGHT}, 1fr)`,
+                  gap: '1px',
+                  borderRadius: '12px'
+                } : {
                   width: GRID_WIDTH * BASE_CELL + 16,
                   height: GRID_HEIGHT * BASE_CELL + 16,
                   transform: `scale(${scale})`,
@@ -491,18 +582,56 @@ export const TetrisGame: React.FC<TetrisGameProps> = ({ onClose }) => {
                   gap: '1px'
                 }}
               >
+                {/* Score display in fullscreen */}
+                {isFullscreen && (
+                  <div className="absolute -top-20 left-0 text-white">
+                    <div className="bg-black/60 rounded-lg p-4">
+                      <div className="text-xl font-bold">Pieces: {score}</div>
+                      <div className="text-lg">Level: {level}</div>
+                      <div className="text-lg">Score: {score}</div>
+                    </div>
+                  </div>
+                )}
+
+                {/* Updated grid rendering with better sizing */}
                 {renderGrid().map((row, y) =>
                   row.map((cell, x) => (
                     <div
                       key={`${y}-${x}`}
-                      className={`w-4 h-4 rounded-sm border border-border/20 ${
+                      className={`rounded-sm border border-border/20 ${
                         cell ? COLORS[cell] : 'bg-muted/10'
                       } transition-colors`}
+                      style={{
+                        width: '100%',
+                        height: '100%'
+                      }}
                     />
                   ))
                 )}
-                {renderGhostPiece()}
                 {renderActivePiece()}
+
+                {/* Fullscreen Exit Button - better positioning */}
+                {isFullscreen && (
+                  <button
+                    onClick={exitFullscreen}
+                    className="absolute -top-20 right-0 game-btn-secondary p-4 z-10"
+                  >
+                    <X className="w-8 h-8" />
+                  </button>
+                )}
+
+                {/* Fullscreen Touch Instructions - improved */}
+                {isFullscreen && (
+                  <div className="absolute -bottom-20 left-0 right-0 text-center">
+                    <div className="bg-black/70 rounded-lg p-4 text-white text-lg backdrop-blur-sm">
+                      <div className="flex justify-center items-center gap-4">
+                        <span>↔️ Swipe: Move</span>
+                        <span>👆 Tap: Rotate</span>
+                        <span>⬇️ Swipe Down: Drop</span>
+                      </div>
+                    </div>
+                  </div>
+                )}
               </div>
             </div>
 
@@ -516,10 +645,15 @@ export const TetrisGame: React.FC<TetrisGameProps> = ({ onClose }) => {
                   {score === highScore && score > 0 && (
                     <p className="text-accent font-semibold">🎉 New High Score!</p>
                   )}
-                  <button onClick={startGame} className="game-btn-primary">
-                    <RotateCcw className="w-4 h-4 mr-2" />
-                    Play Again
-                  </button>
+                  <div className="flex gap-4 justify-center">
+                    <button onClick={startGame} className="game-btn-primary">
+                      <RotateCcw className="w-4 h-4 mr-2" />
+                      Play Again
+                    </button>
+                    <button onClick={exitFullscreen} className="game-btn-secondary">
+                      Go Back
+                    </button>
+                  </div>
                 </div>
               </div>
             )}
@@ -536,7 +670,7 @@ export const TetrisGame: React.FC<TetrisGameProps> = ({ onClose }) => {
           </div>
 
           {/* Mobile Controls */}
-          <div className="space-y-4">
+          <div className="space-y-4 w-full">
             <div className="grid grid-cols-3 gap-2">
               <div></div>
               <button

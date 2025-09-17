@@ -27,6 +27,7 @@ export const FlappyBirdGame: React.FC<FlappyBirdGameProps> = ({ onClose }) => {
   const PIPE_SPEED = 3;
 
   const gameRef = useRef<HTMLDivElement>(null);
+  const gameCanvasRef = useRef<HTMLDivElement>(null);
   const [bird, setBird] = useState<Bird>({ y: GAME_HEIGHT / 2, velocity: 0 });
   const [pipes, setPipes] = useState<Pipe[]>([]);
   const [isPlaying, setIsPlaying] = useState(false);
@@ -36,6 +37,7 @@ export const FlappyBirdGame: React.FC<FlappyBirdGameProps> = ({ onClose }) => {
     return parseInt(localStorage.getItem('flappyBirdHighScore') || '0');
   });
   const [scale, setScale] = useState(1);
+  const [isFullscreen, setIsFullscreen] = useState(false);
 
   const jump = useCallback(() => {
     if (!isPlaying || gameOver) return;
@@ -159,7 +161,46 @@ export const FlappyBirdGame: React.FC<FlappyBirdGameProps> = ({ onClose }) => {
     };
   }, [jump]);
 
-  const startGame = () => {
+  // Fullscreen management - only for game canvas
+  const enterFullscreen = useCallback(async () => {
+    try {
+      if (gameCanvasRef.current && gameCanvasRef.current.requestFullscreen) {
+        await gameCanvasRef.current.requestFullscreen();
+        setIsFullscreen(true);
+      }
+    } catch (error) {
+      console.log('Fullscreen not supported or denied');
+    }
+  }, []);
+
+  const exitFullscreen = useCallback(async () => {
+    try {
+      if (document.exitFullscreen && document.fullscreenElement) {
+        await document.exitFullscreen();
+      }
+    } catch (error) {
+      console.log('Exit fullscreen error');
+    }
+    setIsFullscreen(false);
+  }, []);
+
+  const handleGoBack = useCallback(async () => {
+    await exitFullscreen();
+    onClose();
+  }, [exitFullscreen, onClose]);
+
+  // Listen for fullscreen changes
+  useEffect(() => {
+    const handleFullscreenChange = () => {
+      setIsFullscreen(!!document.fullscreenElement);
+    };
+    
+    document.addEventListener('fullscreenchange', handleFullscreenChange);
+    return () => document.removeEventListener('fullscreenchange', handleFullscreenChange);
+  }, []);
+
+  // Modified start game
+  const startGame = async () => {
     if (gameOver) {
       setBird({ y: GAME_HEIGHT / 2, velocity: 0 });
       setPipes([]);
@@ -167,6 +208,7 @@ export const FlappyBirdGame: React.FC<FlappyBirdGameProps> = ({ onClose }) => {
       setGameOver(false);
     }
     setIsPlaying(true);
+    await enterFullscreen();
   };
 
   const resetGame = () => {
@@ -190,8 +232,8 @@ export const FlappyBirdGame: React.FC<FlappyBirdGameProps> = ({ onClose }) => {
   }, []);
 
   return (
-    <div className="fixed inset-0 bg-black/80 backdrop-blur-sm z-50 flex items-center justify-center p-2 sm:p-4">
-      <div className="game-card w-full max-w-2xl mx-auto max-h-[100vh] overflow-y-auto">
+    <div className={`fixed inset-0 bg-black/80 backdrop-blur-sm z-50 flex items-center justify-center ${isFullscreen ? 'p-0' : 'p-2 sm:p-4'}`}>
+      <div className={`game-card w-full mx-auto ${isFullscreen ? 'max-w-none h-full' : 'max-w-2xl max-h-[100vh]'} overflow-y-auto`}>
         {/* Header */}
         <div className="flex items-center justify-between mb-6">
           <div className="flex items-center gap-3">
@@ -201,7 +243,7 @@ export const FlappyBirdGame: React.FC<FlappyBirdGameProps> = ({ onClose }) => {
             <h2 className="text-2xl font-bold text-foreground">Flappy Bird</h2>
           </div>
           <button
-            onClick={onClose}
+            onClick={handleGoBack}
             className="game-btn-secondary p-2 hover:bg-destructive hover:text-destructive-foreground"
           >
             <X className="w-5 h-5" />
@@ -236,16 +278,21 @@ export const FlappyBirdGame: React.FC<FlappyBirdGameProps> = ({ onClose }) => {
           <div className="relative">
             <div
               className="mx-auto origin-top-left"
-              style={{
+              style={isFullscreen ? {} : {
                 width: GAME_WIDTH * scale,
                 height: GAME_HEIGHT * scale,
                 position: 'relative'
               }}
             >
               <div
-                ref={gameRef}
-                className="relative bg-gradient-to-b from-blue-400 to-blue-600 border border-border/50 rounded-xl overflow-hidden cursor-pointer select-none"
-                style={{
+                ref={gameCanvasRef}
+                className={`relative bg-gradient-to-b from-blue-400 to-blue-600 border border-border/50 rounded-xl overflow-hidden cursor-pointer select-none ${isFullscreen ? 'fixed inset-0 z-[60]' : ''}`}
+                style={isFullscreen ? {
+                  width: '100vw',
+                  height: '100vh',
+                  borderRadius: 0,
+                  transform: 'none'
+                } : {
                   width: GAME_WIDTH,
                   height: GAME_HEIGHT,
                   transform: `scale(${scale})`,
@@ -253,148 +300,182 @@ export const FlappyBirdGame: React.FC<FlappyBirdGameProps> = ({ onClose }) => {
                 }}
                 onClick={jump}
               >
-                {/* Background */}
-                <div className="absolute inset-0 bg-gradient-to-b from-blue-400 via-blue-500 to-green-400">
-                  {/* Clouds */}
-                  <div className="absolute top-10 left-10 w-16 h-8 bg-white/30 rounded-full"></div>
-                  <div className="absolute top-20 right-20 w-12 h-6 bg-white/20 rounded-full"></div>
-                  <div className="absolute top-32 left-32 w-20 h-10 bg-white/25 rounded-full"></div>
-                </div>
-
-                {/* Bird */}
-                <div
-                  className="absolute bg-yellow-400 border-2 border-orange-400 rounded-full transition-transform duration-75"
-                  style={{
-                    width: BIRD_SIZE,
-                    height: BIRD_SIZE,
-                    left: 50,
-                    top: bird.y,
-                    transform: `rotate(${Math.min(Math.max(bird.velocity * 3, -45), 45)}deg)`
-                  }}
+                {/* Game content scaled to fullscreen */}
+                <div 
+                  className="relative w-full h-full"
+                  style={isFullscreen ? {
+                    width: '100vw',
+                    height: '100vh',
+                    transform: 'none'
+                  } : {}}
                 >
-                  <div className="absolute top-1 left-1 w-2 h-2 bg-black rounded-full"></div>
-                  <div className="absolute top-3 right-1 w-1 h-1 bg-orange-600 rounded-full"></div>
+                  {/* Background */}
+                  <div className="absolute inset-0 bg-gradient-to-b from-blue-400 via-blue-500 to-green-400">
+                    {/* Clouds */}
+                    <div className="absolute top-10 left-10 w-16 h-8 bg-white/30 rounded-full"></div>
+                    <div className="absolute top-20 right-20 w-12 h-6 bg-white/20 rounded-full"></div>
+                    <div className="absolute top-32 left-32 w-20 h-10 bg-white/25 rounded-full"></div>
+                  </div>
+
+                  {/* Bird */}
+                  <div
+                    className="absolute bg-yellow-400 border-2 border-orange-400 rounded-full transition-transform duration-75"
+                    style={{
+                      width: BIRD_SIZE,
+                      height: BIRD_SIZE,
+                      left: 50,
+                      top: bird.y,
+                      transform: `rotate(${Math.min(Math.max(bird.velocity * 3, -45), 45)}deg)`
+                    }}
+                  >
+                    <div className="absolute top-1 left-1 w-2 h-2 bg-black rounded-full"></div>
+                    <div className="absolute top-3 right-1 w-1 h-1 bg-orange-600 rounded-full"></div>
+                  </div>
+
+                  {/* Pipes */}
+                  {pipes.map((pipe, index) => (
+                    <div key={index}>
+                      {/* Top pipe */}
+                      <div
+                        className="absolute bg-green-600 border-r-4 border-green-700"
+                        style={{
+                          left: pipe.x,
+                          top: 0,
+                          width: PIPE_WIDTH,
+                          height: pipe.gapY
+                        }}
+                      >
+                        <div
+                          className="absolute bottom-0 left-0 bg-green-500 border-2 border-green-700"
+                          style={{
+                            width: PIPE_WIDTH + 8,
+                            height: 30,
+                            marginLeft: -4
+                          }}
+                        ></div>
+                      </div>
+                      
+                      {/* Bottom pipe */}
+                      <div
+                        className="absolute bg-green-600 border-r-4 border-green-700"
+                        style={{
+                          left: pipe.x,
+                          top: pipe.gapY + PIPE_GAP,
+                          width: PIPE_WIDTH,
+                          height: GAME_HEIGHT - pipe.gapY - PIPE_GAP
+                        }}
+                      >
+                        <div
+                          className="absolute top-0 left-0 bg-green-500 border-2 border-green-700"
+                          style={{
+                            width: PIPE_WIDTH + 8,
+                            height: 30,
+                            marginLeft: -4
+                          }}
+                        ></div>
+                      </div>
+                    </div>
+                  ))}
+
+                  {/* Ground */}
+                  <div className="absolute bottom-0 left-0 right-0 h-4 bg-green-600 border-t-2 border-green-700"></div>
+
+                  {/* Game Over Overlay */}
+                  {gameOver && (
+                    <div className="absolute inset-0 bg-black/70 flex items-center justify-center">
+                      <div className="text-center space-y-4">
+                        <h3 className="text-3xl font-bold text-white">Game Over!</h3>
+                        <p className="text-lg text-white/80">Score: {score}</p>
+                        {score === highScore && score > 0 && (
+                          <p className="text-yellow-400 font-semibold">🎉 New High Score!</p>
+                        )}
+                        <div className="flex gap-4 justify-center">
+                          <button onClick={startGame} className="game-btn-primary">
+                            <RotateCcw className="w-4 h-4 mr-2" />
+                            Play Again
+                          </button>
+                          <button onClick={handleGoBack} className="game-btn-secondary">
+                            Go Back
+                          </button>
+                        </div>
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Start Game Overlay */}
+                  {!isPlaying && !gameOver && (
+                    <div className="absolute inset-0 bg-black/50 flex items-center justify-center">
+                      <div className="text-center space-y-4">
+                        <button onClick={startGame} className="game-btn-primary text-lg px-8 py-4">
+                          <Play className="w-5 h-5 mr-2" />
+                          Start Game
+                        </button>
+                        <p className="text-white/80 text-sm">Tap to flap!</p>
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Score display during game */}
+                  {isPlaying && !gameOver && (
+                    <div className="absolute top-4 left-1/2 transform -translate-x-1/2">
+                      <div className="text-4xl font-bold text-white text-center drop-shadow-lg">
+                        {score}
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Fullscreen Exit Button */}
+                  {isFullscreen && (
+                    <button
+                      onClick={exitFullscreen}
+                      className="absolute top-4 right-4 game-btn-secondary p-2 z-10"
+                    >
+                      <X className="w-5 h-5" />
+                    </button>
+                  )}
+
+                  {/* Fullscreen Touch Instructions */}
+                  {isFullscreen && !gameOver && !(!isPlaying && !gameOver) && (
+                    <div className="absolute bottom-4 left-4 right-4 text-center">
+                      <div className="bg-black/50 rounded-lg p-2 text-white text-sm">
+                        Tap anywhere to flap
+                      </div>
+                    </div>
+                  )}
                 </div>
-
-                {/* Pipes */}
-                {pipes.map((pipe, index) => (
-                  <div key={index}>
-                    {/* Top pipe */}
-                    <div
-                      className="absolute bg-green-600 border-r-4 border-green-700"
-                      style={{
-                        left: pipe.x,
-                        top: 0,
-                        width: PIPE_WIDTH,
-                        height: pipe.gapY
-                      }}
-                    >
-                      <div
-                        className="absolute bottom-0 left-0 bg-green-500 border-2 border-green-700"
-                        style={{
-                          width: PIPE_WIDTH + 8,
-                          height: 30,
-                          marginLeft: -4
-                        }}
-                      ></div>
-                    </div>
-                    
-                    {/* Bottom pipe */}
-                    <div
-                      className="absolute bg-green-600 border-r-4 border-green-700"
-                      style={{
-                        left: pipe.x,
-                        top: pipe.gapY + PIPE_GAP,
-                        width: PIPE_WIDTH,
-                        height: GAME_HEIGHT - pipe.gapY - PIPE_GAP
-                      }}
-                    >
-                      <div
-                        className="absolute top-0 left-0 bg-green-500 border-2 border-green-700"
-                        style={{
-                          width: PIPE_WIDTH + 8,
-                          height: 30,
-                          marginLeft: -4
-                        }}
-                      ></div>
-                    </div>
-                  </div>
-                ))}
-
-                {/* Ground */}
-                <div className="absolute bottom-0 left-0 right-0 h-4 bg-green-600 border-t-2 border-green-700"></div>
-
-                {/* Game Over Overlay */}
-                {gameOver && (
-                  <div className="absolute inset-0 bg-black/70 flex items-center justify-center">
-                    <div className="text-center space-y-4">
-                      <h3 className="text-3xl font-bold text-white">Game Over!</h3>
-                      <p className="text-lg text-white/80">Score: {score}</p>
-                      {score === highScore && score > 0 && (
-                        <p className="text-yellow-400 font-semibold">🎉 New High Score!</p>
-                      )}
-                      <button onClick={startGame} className="game-btn-primary">
-                        <RotateCcw className="w-4 h-4 mr-2" />
-                        Play Again
-                      </button>
-                    </div>
-                  </div>
-                )}
-
-                {/* Start Game Overlay */}
-                {!isPlaying && !gameOver && (
-                  <div className="absolute inset-0 bg-black/50 flex items-center justify-center">
-                    <div className="text-center space-y-4">
-                      <button onClick={startGame} className="game-btn-primary text-lg px-8 py-4">
-                        <Play className="w-5 h-5 mr-2" />
-                        Start Game
-                      </button>
-                      <p className="text-white/80 text-sm">Tap to flap!</p>
-                    </div>
-                  </div>
-                )}
-
-                {/* Score display during game */}
-                {isPlaying && !gameOver && (
-                  <div className="absolute top-4 left-1/2 transform -translate-x-1/2">
-                    <div className="text-4xl font-bold text-white text-center drop-shadow-lg">
-                      {score}
-                    </div>
-                  </div>
-                )}
               </div>
             </div>
-          </div>
 
-          {/* Controls */}
-          <div className="space-y-4">
-            <div className="flex flex-col gap-2">
-              <button
-                onClick={() => setIsPlaying(!isPlaying)}
-                disabled={gameOver}
-                className="game-btn-secondary py-3"
-              >
-                {isPlaying ? <Pause className="w-5 h-5" /> : <Play className="w-5 h-5" />}
-              </button>
-              <button
-                onClick={resetGame}
-                className="game-btn-secondary py-3"
-              >
-                <RotateCcw className="w-5 h-5" />
-              </button>
-            </div>
-
-            <div className="text-center space-y-2">
-              <div className="p-4 rounded-lg bg-accent/10 border border-accent/20">
-                <p className="text-sm font-semibold text-accent mb-2">Mobile Controls</p>
-                <p className="text-xs text-muted-foreground">
-                  Tap anywhere on the game area to make the bird flap upward!
-                </p>
+            {/* Controls */}
+            <div className="space-y-4">
+              <div className="flex flex-col gap-2">
+                <button
+                  onClick={() => setIsPlaying(!isPlaying)}
+                  disabled={gameOver}
+                  className="game-btn-secondary py-3"
+                >
+                  {isPlaying ? <Pause className="w-5 h-5" /> : <Play className="w-5 h-5" />}
+                </button>
+                <button
+                  onClick={resetGame}
+                  className="game-btn-secondary py-3"
+                >
+                  <RotateCcw className="w-5 h-5" />
+                </button>
               </div>
-              
-              <div className="text-xs text-muted-foreground space-y-1">
-                <p>Desktop: Space or click</p>
-                <p>Mobile: Tap the game area</p>
+
+              <div className="text-center space-y-2">
+                <div className="p-4 rounded-lg bg-accent/10 border border-accent/20">
+                  <p className="text-sm font-semibold text-accent mb-2">Mobile Controls</p>
+                  <p className="text-xs text-muted-foreground">
+                    Tap anywhere on the game area to make the bird flap upward!
+                  </p>
+                </div>
+                
+                <div className="text-xs text-muted-foreground space-y-1">
+                  <p>Desktop: Space or click</p>
+                  <p>Mobile: Tap the game area</p>
+                </div>
               </div>
             </div>
           </div>
