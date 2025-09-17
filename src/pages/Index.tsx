@@ -50,6 +50,9 @@ const Index = () => {
             <p className="text-sm text-muted-foreground">
               Powered by <span className="font-semibold text-primary">PEH Network Hub</span> © 2025
             </p>
+            <p className="text-xs text-muted-foreground">
+              This version is beta version. If any feedback mail to <a href="mailto:Umasai2465@gmail.com" className="underline">Umasai2465@gmail.com</a>
+            </p>
           </div>
         </div>
       </footer>
