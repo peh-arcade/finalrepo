@@ -38,6 +38,7 @@ export const Game2048: React.FC<Game2048Props> = ({ onClose }) => {
   const [animationId, setAnimationId] = useState(0);
 
   const gameCanvasRef = useRef<HTMLDivElement>(null);
+  const containerRef = useRef<HTMLDivElement>(null); // NEW: fullscreen container
 
   // Mobile detection
   useEffect(() => {
@@ -48,6 +49,41 @@ export const Game2048: React.FC<Game2048Props> = ({ onClose }) => {
     checkMobile();
     window.addEventListener('resize', checkMobile);
     return () => window.removeEventListener('resize', checkMobile);
+  }, []);
+
+  // NEW: lock scroll & overscroll + attempt fullscreen
+  useEffect(() => {
+    const originalOverflow = document.body.style.overflow;
+    const originalHtmlOverscroll = (document.documentElement.style as any).overscrollBehavior;
+    document.body.style.overflow = 'hidden';
+    (document.documentElement.style as any).overscrollBehavior = 'none';
+
+    const preventPullToRefresh = (e: TouchEvent) => {
+      if (e.touches.length === 1) {
+        e.preventDefault();
+      }
+    };
+    window.addEventListener('touchmove', preventPullToRefresh, { passive: false });
+
+    const tryFullscreen = () => {
+      if (!document.fullscreenElement && containerRef.current?.requestFullscreen) {
+        containerRef.current.requestFullscreen().catch(() => {});
+      }
+    };
+    // Initial attempt (may be blocked)
+    tryFullscreen();
+    const firstInteraction = () => {
+      tryFullscreen();
+    };
+    window.addEventListener('touchstart', firstInteraction, { once: true });
+    window.addEventListener('click', firstInteraction, { once: true });
+    window.addEventListener('keydown', firstInteraction, { once: true });
+
+    return () => {
+      document.body.style.overflow = originalOverflow;
+      (document.documentElement.style as any).overscrollBehavior = originalHtmlOverscroll || '';
+      window.removeEventListener('touchmove', preventPullToRefresh);
+    };
   }, []);
 
   function initializeBoard(): Board {
@@ -317,7 +353,22 @@ export const Game2048: React.FC<Game2048Props> = ({ onClose }) => {
   const dimensions = getResponsiveDimensions();
 
   return (
-    <div className="flamingo-overlay">
+    <div
+      ref={containerRef}                       // NEW
+      className="flamingo-overlay"
+      style={{                                  // UPDATED: enforce full screen & no scroll bounce
+        position: 'fixed',
+        inset: 0,
+        width: '100vw',
+        height: '100vh',
+        overflow: 'hidden',
+        WebkitOverflowScrolling: 'auto',
+        overscrollBehavior: 'none',
+        touchAction: 'none',
+        display: 'flex',
+        flexDirection: 'column'
+      }}
+    >
       {/* Keep the flamingo topbar for consistency */}
       <div className="flamingo-topbar">
         <button className="f-back" onClick={onClose}>

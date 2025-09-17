@@ -1,1 +1,1 @@
-// DELETE THIS FILE - Replace with Game2048.tsx
+// (Deleted - replaced by Game2048.tsx)
