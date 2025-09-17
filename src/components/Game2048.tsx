@@ -352,6 +352,25 @@ export const Game2048: React.FC<Game2048Props> = ({ onClose }) => {
 
   const dimensions = getResponsiveDimensions();
 
+  const safeClose = useCallback(() => {
+    if (document.fullscreenElement && document.exitFullscreen) {
+      document.exitFullscreen().finally(onClose);
+    } else {
+      onClose();
+    }
+  }, [onClose]);
+
+  // Augment existing keyboard listener to block refresh
+  useEffect(() => {
+    const blockReload = (e: KeyboardEvent) => {
+      if (e.key === 'F5' || (e.ctrlKey && (e.key === 'r' || e.key === 'R'))) {
+        e.preventDefault();
+      }
+    };
+    window.addEventListener('keydown', blockReload, { capture: true });
+    return () => window.removeEventListener('keydown', blockReload, { capture: true } as any);
+  }, []);
+
   return (
     <div
       ref={containerRef}                       // NEW
@@ -371,7 +390,7 @@ export const Game2048: React.FC<Game2048Props> = ({ onClose }) => {
     >
       {/* Keep the flamingo topbar for consistency */}
       <div className="flamingo-topbar">
-        <button className="f-back" onClick={onClose}>
+        <button className="f-back" onClick={safeClose}>
           ✕
         </button>
         <div className="f-score">

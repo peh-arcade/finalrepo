@@ -35,6 +35,7 @@ export const SnakeGame: React.FC<SnakeGameProps> = ({ onClose }) => {
   const [gameOver, setGameOver] = useState(false);
   const [isMobile, setIsMobile] = useState(false);
 
+  const containerRef = useRef<HTMLDivElement>(null); // NEW fullscreen container ref
   const gameCanvasRef = useRef<HTMLDivElement>(null);
 
   // Mobile detection
@@ -144,9 +145,45 @@ export const SnakeGame: React.FC<SnakeGameProps> = ({ onClose }) => {
     return () => clearInterval(interval);
   }, [moveSnake, isPlaying]);
 
-  // Keyboard controls
+  // NEW: lock scroll, overscroll & request fullscreen
+  useEffect(() => {
+    const originalOverflow = document.body.style.overflow;
+    const originalObs = (document.documentElement.style as any).overscrollBehavior;
+    document.body.style.overflow = 'hidden';
+    (document.documentElement.style as any).overscrollBehavior = 'none';
+
+    const preventPull = (e: TouchEvent) => {
+      if (e.touches.length === 1) e.preventDefault();
+    };
+    window.addEventListener('touchmove', preventPull, { passive: false });
+
+    const tryFs = () => {
+      if (!document.fullscreenElement && containerRef.current?.requestFullscreen) {
+        containerRef.current.requestFullscreen().catch(()=>{});
+      }
+    };
+    // initial + first interaction retries
+    tryFs();
+    const first = () => tryFs();
+    window.addEventListener('touchstart', first, { once: true });
+    window.addEventListener('click', first, { once: true });
+    window.addEventListener('keydown', first, { once: true });
+
+    return () => {
+      document.body.style.overflow = originalOverflow;
+      (document.documentElement.style as any).overscrollBehavior = originalObs || '';
+      window.removeEventListener('touchmove', preventPull);
+    };
+  }, []);
+
+  // Keyboard controls (augment to block refresh keys)
   useEffect(() => {
     const handleKey = (e: KeyboardEvent) => {
+      // Prevent browser refresh/navigation
+      if (e.key === 'F5' || (e.ctrlKey && (e.key === 'r' || e.key === 'R'))) {
+        e.preventDefault();
+        return;
+      }
       e.preventDefault();
       switch (e.key) {
         case "ArrowUp":
@@ -170,8 +207,7 @@ export const SnakeGame: React.FC<SnakeGameProps> = ({ onClose }) => {
           if (direction !== "LEFT") setNextDirection("RIGHT");
           break;
         case " ":
-          if (gameOver) return;
-          setIsPlaying((prev) => !prev);
+          if (!gameOver) setIsPlaying(p => !p);
           break;
       }
     };
@@ -257,10 +293,33 @@ export const SnakeGame: React.FC<SnakeGameProps> = ({ onClose }) => {
   const baseCellSize = isMobile ? Math.min(CELL_SIZE, (window.innerWidth - 40) / GRID_COLS) : CELL_SIZE;
   const FOOD_SCALE = 1.3; // Increase apple size (1.0 = normal)
 
+  // Safe close exits fullscreen
+  const handleClose = useCallback(() => {
+    if (document.fullscreenElement && document.exitFullscreen) {
+      document.exitFullscreen().finally(onClose);
+    } else {
+      onClose();
+    }
+  }, [onClose]);
+
   return (
-    <div className="flamingo-overlay">
+    <div
+      ref={containerRef} // NEW
+      className="flamingo-overlay"
+      style={{ // enforce fullscreen & disable scrolling bounce
+        position: 'fixed',
+        inset: 0,
+        width: '100vw',
+        height: '100vh',
+        overflow: 'hidden',
+        overscrollBehavior: 'none',
+        touchAction: 'none',
+        display: 'flex',
+        flexDirection: 'column'
+      }}
+    >
       <div className="flamingo-topbar">
-        <button className="f-back" onClick={onClose}>
+        <button className="f-back" onClick={handleClose}>
           ✕
         </button>
         <div className="f-score">
@@ -377,7 +436,7 @@ export const SnakeGame: React.FC<SnakeGameProps> = ({ onClose }) => {
                     <button className="snake-overlay-button" onClick={handleRestart}>
                       PLAY AGAIN
                     </button>
-                    <button className="snake-overlay-button" onClick={onClose}>
+                    <button className="snake-overlay-button" onClick={handleClose}>
                       EXIT
                     </button>
                   </div>
