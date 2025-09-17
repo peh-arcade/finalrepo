@@ -30,16 +30,16 @@ const Index = () => {
       {selectedGame === 'snake' && (
         <SnakeGame onClose={handleCloseGame} />
       )}
-      {selectedGame === '2048' && (
-        <Game2048 onClose={handleCloseGame} />
-      )}
+      
       {selectedGame === 'flappybird' && (
         <FlappyBirdGame onExit={handleCloseGame} onScore={() => {}} />
       )}
       {selectedGame === 'racing' && (
         <CarRacingGame onClose={handleCloseGame} />
       )}
-      
+      {selectedGame === '2048' && (
+        <Game2048 onClose={handleCloseGame} />
+      )}
       {/* Footer */}
       <footer className="py-12 border-t border-border/20">
         <div className="container mx-auto px-4 text-center">

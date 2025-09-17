@@ -16,14 +16,7 @@ export const GameGrid: React.FC<GameGridProps> = ({ onGameSelect }) => {
       bestScore: localStorage.getItem("snakeHighScore") || "0",
       comingSoon: false,
     },
-    {
-      id: "2048",
-      title: "2048",
-      description: "Merge numbers to reach 2048",
-      icon: Hash,
-      bestScore: localStorage.getItem("2048HighScore") || "0",
-      comingSoon: false,
-    },
+    
     {
       id: "flappybird",
       title: "Flappy Bird",
@@ -38,6 +31,14 @@ export const GameGrid: React.FC<GameGridProps> = ({ onGameSelect }) => {
       description: "Swipe to dodge traffic",
       icon: Car,
       bestScore: localStorage.getItem("carRacingHighScore") || "0",
+      comingSoon: false,
+    },
+    {
+      id: "2048",
+      title: "2048",
+      description: "Merge numbers to reach 2048",
+      icon: Hash,
+      bestScore: localStorage.getItem("2048HighScore") || "0",
       comingSoon: false,
     },
   ];
