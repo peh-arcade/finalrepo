@@ -43,9 +43,14 @@ const Index = () => {
       {/* Footer */}
       <footer className="py-12 border-t border-border/20">
         <div className="container mx-auto px-4 text-center">
-          <p className="text-muted-foreground">
-            Built with ❤️ for the ultimate timepass
-          </p>
+          <div className="space-y-2">
+            <p className="text-muted-foreground">
+              Built with ❤️ for the ultimate timepass
+            </p>
+            <p className="text-sm text-muted-foreground">
+              Powered by <span className="font-semibold text-primary">PEH Network Hub</span> © 2025
+            </p>
+          </div>
         </div>
       </footer>
     </div>

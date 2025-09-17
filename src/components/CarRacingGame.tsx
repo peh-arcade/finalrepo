@@ -712,30 +712,73 @@ export const CarRacingGame: React.FC<CarRacingGameProps> = ({ onClose }) => {
             </div>
           </div>
 
-          {/* Bottom Racing Controls */}
-          {isMobile && (
-            <div className="absolute bottom-0 left-0 right-0 z-25 p-4">
-              <div className="bg-black/90 backdrop-blur-sm rounded-2xl p-4 border border-white/20">
-                <div className="flex justify-center items-center gap-8 text-white">
-                  <div className="flex items-center gap-3">
-                    <div className="bg-blue-600 rounded-lg p-2">
-                      <ChevronLeft className="w-6 h-6" />
-                    </div>
-                    <span className="font-medium">← Lane</span>
-                  </div>
-                  <div className="text-center">
-                    <div className="text-lg font-bold">🏎️</div>
-                    <div className="text-xs">Racing</div>
-                  </div>
-                  <div className="flex items-center gap-3">
-                    <div className="bg-blue-600 rounded-lg p-2">
-                      <ChevronRight className="w-6 h-6" />
-                    </div>
-                    <span className="font-medium">Lane →</span>
-                  </div>
-                </div>
+          {/* Bottom Racing Controls (removed old bottom bar) */}
+          {/*
+            OLD:
+            {isMobile && (
+              <div className="absolute bottom-0 left-0 right-0 z-25 p-4">
+                <div className="bg-black/90 ..."> ... </div>
               </div>
-            </div>
+            )}
+          */}
+
+          {/* Side Steering Buttons (mobile) */}
+          {isMobile && !gameOver && (
+            <>
+              <button
+                aria-label="Move Left"
+                onPointerDown={() => {
+                  movePlayer('left');
+                  if (isMobile) {
+                    triggerHapticFeedback();
+                    showTouchIndicator();
+                  }
+                }}
+                disabled={!isPlaying || playerCar.lane === 0}
+                className={`absolute z-30 flex items-center justify-center
+                  text-white font-semibold select-none
+                  rounded-xl shadow
+                  active:scale-95 transition-transform
+                  border border-white/10
+                  ${playerCar.lane === 0 || !isPlaying ? 'bg-blue-600/50 cursor-not-allowed' : 'bg-blue-600'}
+                `}
+                style={{
+                  left: '14px',
+                  bottom: '18px',
+                  width: '72px',
+                  height: '72px'
+                }}
+              >
+                <ChevronLeft className="w-8 h-8" />
+              </button>
+
+              <button
+                aria-label="Move Right"
+                onPointerDown={() => {
+                  movePlayer('right');
+                  if (isMobile) {
+                    triggerHapticFeedback();
+                    showTouchIndicator();
+                  }
+                }}
+                disabled={!isPlaying || playerCar.lane === LANE_COUNT - 1}
+                className={`absolute z-30 flex items-center justify-center
+                  text-white font-semibold select-none
+                  rounded-xl shadow
+                  active:scale-95 transition-transform
+                  border border-white/10
+                  ${playerCar.lane === LANE_COUNT - 1 || !isPlaying ? 'bg-blue-600/50 cursor-not-allowed' : 'bg-blue-600'}
+                `}
+                style={{
+                  right: '14px',
+                  bottom: '18px',
+                  width: '72px',
+                  height: '72px'
+                }}
+              >
+                <ChevronRight className="w-8 h-8" />
+              </button>
+            </>
           )}
 
           {/* Show intro hint */}
